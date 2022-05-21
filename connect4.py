@@ -98,12 +98,12 @@ class Board:
         # thinking count will work with while to recursively check adjacents until 4, in which case win
         count = 1
         # iterate through every Token object in self.tokens (list). adjacents list is all possible adjacent cells relative X and Y values
-        for num, t in self.tokens.items():
+        for num, token in self.tokens.items():
             adjacents = [(t.x-1, t.y+1), (t.x-1, t.y), (t.x-1, t.y-1), (t.x, t.y+1), (t.x, t.y-1,), (t.x+1, t.y+1), (t.x+1, t.y), (t.x+1, t.y-1)]
             # current_x and y are for legibility..having trouble wrapping my head around this...
             current_x = t.x
             current_y = t.y
-            print(f'Token # {num} position is: {current_x}, {current_y}')
+            print(f'Current token position is: {current_x}, {current_y}')
             for a in adjacents:
                 adj_x = a[0]
                 adj_y = a[1]
@@ -181,7 +181,7 @@ for c in range(board.num_cols):
     for r in range(board.num_rows):
         board.drop_token(c+1, cpu)
 
-for num, t in board.tokens.items():
+for num , t in board.tokens.items():
     print(f'Token {num}... X: {t.x}, Token Y: {t.y}')
 
 print(board.check_win())
