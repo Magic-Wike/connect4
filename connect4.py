@@ -1,6 +1,5 @@
 #imports
 import random
-from tabnanny import check
 
 # class definitions
 
@@ -11,7 +10,9 @@ class Game:
         self.players = []
         self.tokens = []
 
-
+# ***MOST IMPORTANT COMMENT IN THE WHOLE THING**:
+# game board is a 2 dimensional list and thus is referenced as board[Y][X]..this is counter intuitive since Y value comes first. 
+# everything else *should* be coded to take an x,y value (token objects for example), but easy mistake to make. keep eye out for bugs
 class Board:
     # creates a board instance with a variable # of rows and colums (default: 6, 7)
     # board currently does not format correctly for nums larger than 7. Need to update formatting for 2 digit numbers
@@ -52,7 +53,7 @@ class Board:
         else:
             return True
 
-
+    # creates a Token object and drops it into the game board at specified column number (1-7). 
     def drop_token(self, col, player):
         # assigns X or O depending on if Player or CPU. this is purely for string formatting
         if isinstance(player, Player):
@@ -68,9 +69,9 @@ class Board:
         # iterating through column from bottom up
         print(f'\n{player.name} attempts to drop a {token} in column {col}...\r')
         for i in range(self.num_rows-1, -1, -1):
-            column = self.board[i]
+            row = self.board[i]
             tokenY = i
-            cell = column[tokenX]
+            cell = row[tokenX]
             # if cell is empty (valid move), instance of Token class is created, and board is updated
             # also adds +1 to player/CPU .moves
             if cell == '|   |':
@@ -93,12 +94,16 @@ class Board:
             print('\nBoard is full! No more possible moves...\n')
             print('\nGAME OVER!!!\n')
 
+    def print_all_tokens(self):
+        for num , t in self.tokens.items():
+            print(f'Token {num}... X: {t.x}, Y: {t.y}')
+
     # work in progress...
     def check_win(self):
         # thinking count will work with while to recursively check adjacents until 4, in which case win
         count = 1
         # iterate through every Token object in self.tokens (list). adjacents list is all possible adjacent cells relative X and Y values
-        for num, token in self.tokens.items():
+        for num, t in self.tokens.items():
             adjacents = [(t.x-1, t.y+1), (t.x-1, t.y), (t.x-1, t.y-1), (t.x, t.y+1), (t.x, t.y-1,), (t.x+1, t.y+1), (t.x+1, t.y), (t.x+1, t.y-1)]
             # current_x and y are for legibility..having trouble wrapping my head around this...
             current_x = t.x
@@ -119,16 +124,26 @@ class Board:
                     # passes boundary checks. check if symbol matches current token, if so continue to check adjacents until 4 in a row
                     print('Valid  cell!')
                     adj_cell = self.board[adj_x][adj_y]
+                    # token lookup function??
                     if adj_cell == t.symbol:
                         print('Ping!')
-                        # count starts at 1 (current token), should now be count of 2 heading into While loop
-                        # count += 1
-                        # while count != 4:
-                        #     pass
-        
+                        next_token = self.token_lookup(adj_x, adj_y)
 
+    # looks up a Token on board based on X,Y value. Returns said Token object
+    # takes optional display parameter that if True will print the game board w/ lookup location as '| ! |'
+    def token_lookup(self, x, y, display=False):
+        for token in self.tokens.values():
+            if token.x == x and token.y == y:
+                if display:
+                    # stores current value (X or O) so we can revert it after displaying it's location
+                    print('\nDisplay reached!\n')
+                    current_value = self.board[y][x]
+                    self.board[y][x] = '| ! |'
+                    self.print_board()
+                    self.board[y][x] = current_value
+                print('\nLookup succesful!\n')
+                return token
 
-                
 # token class created to track token locations, all instances are added to board.tokens
 class Token:
     num = 0
@@ -146,8 +161,6 @@ class Token:
             return '| X |'
         if isinstance(self.player, CPU):
             return '| O |'
-
-
 
 class Player:
     def __init__(self, name='Player'):
@@ -170,20 +183,25 @@ class CPU:
         self.name = name
         self.moves = 0
 
+# testing function. fills entire board with Token for specified Player object
+def fill_board(board, player):
+    for c in range(board.num_cols):
+        for r in range(board.num_rows):
+            board.drop_token(c+1, player)
+
 
 board = Board()
-board.print_board()
 p1 = Player('Wike')
 cpu = CPU()
 
-
-for c in range(board.num_cols):
-    for r in range(board.num_rows):
-        board.drop_token(c+1, cpu)
-
-for num , t in board.tokens.items():
-    print(f'Token {num}... X: {t.x}, Token Y: {t.y}')
-
-print(board.check_win())
+# print(board.check_win())
 # board.board[5][6] = '| ! |'
 # board.print_board()
+
+# print(board.token_lookup(6, 5, True))
+# print(board.token_lookup(3, 3, True))
+# print(board.token_lookup(1, 4, True))
+# board.print_board()
+
+fill_board(board, p1)
+board.print_all_tokens()
