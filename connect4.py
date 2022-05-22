@@ -1,6 +1,7 @@
 #imports
 import random
-
+import c4utils
+from time import sleep
 
 # class definitions
 
@@ -68,7 +69,7 @@ class Board:
             print(f'\nOut of range! There are {self.num_cols} columns in the board.\n')
             return
         # iterating through column from bottom up
-        print(f'\n{player.name} attempts to drop a {token} in column {col}...\r')
+        print(f'\n\n\n{player.name} attempts to drop a {token} in column {col}...\r'), sleep(1)
         for i in range(self.num_rows-1, -1, -1):
             row = self.board[i]
             tokenY = i
@@ -87,12 +88,12 @@ class Board:
             # if at end of loop (i=0) the cell is occupied, column is full.
             # return None and end loop
             if i == 0 and cell in ['| X |', '| O |']:
-                print('\nStack is full!\n')
+                print('\nStack is full!\n'), sleep(1)
                 return
         self.print_board()
         # at the end of every token drop, check if board is full
         if self.check_full():
-            print('\nBoard is full! No more possible moves...\n')
+            print('\nBoard is full! No more possible moves...\n'), sleep(1)
             print('\nGAME OVER!!!\n')
 
     def print_all_tokens(self):
@@ -101,6 +102,26 @@ class Board:
 
     # work in progress...
     def check_win(self):
+        def connect(direction, current_token, next_token):
+            count = 2
+            x_change, y_change = directions[direction]
+            while count < 4:
+                print('entered loop...')
+                current_token = next_token
+                next_token = self.token_lookup(current_token.x+x_change,current_token.y+y_change)
+                try:
+                    print(f'Checking down_left... x:{next_token.x} y:{next_token.y}')
+                except:
+                    print('Nonetype')
+                if next_token is None:
+                    break
+                if next_token.symbol == current_token.symbol:
+                    print('Hit! +1')
+                    count += 1
+                    continue
+            if count == 4:
+                print('\nholy shit did it work?')
+                return 'Win!'
         # thinking count will work with while to recursively check adjacents until 4, in which case win
         # iterate through every Token object in self.tokens (list). adjacents list is all possible adjacent cells relative X and Y values
         for num, t in self.tokens.items():
@@ -121,6 +142,7 @@ class Board:
                     # print('out of range!')
                     continue
                 else:
+                    directions = {'down_left': (-1,+1), 'left': (-1,0), 'up_left': (-1,-1), 'up': (0,-1), 'up_right': (+1,-1), 'right': (+1,0), 'down_right': (+1,+1), 'down': (0,+1)}
                     # passes boundary checks. check if symbol matches current token, if so continue to check adjacents until 4 in a row
                     # print('Valid  cell!')
                     adj_cell = self.board[adj_y][adj_x]
@@ -128,40 +150,27 @@ class Board:
                         print('Ping!')
                         next_token = self.token_lookup(adj_x, adj_y)
                         if next_token.x == t.x-1 and next_token.y == t.y+1:
-                            print('\ndown_left!\n')
-                            count = 2
-                            while count < 4:
-                                print('entered loop...')
-                                current_token = next_token
-                                next_token = self.token_lookup(current_token.x-1,current_token.y+1)
-                                try:
-                                    print(f'Checking down_left... x:{next_token.x} y:{next_token.y}')
-                                except:
-                                    print('Nonetype')
-                                if next_token is None:
-                                    break
-                                if next_token.symbol == current_token.symbol:
-                                    print('Hit! +1')
-                                    count += 1
-                                    continue
-                            if count == 4:
-                                print('\nholy shit did it work?')
-                                return 'Win!'
-                            else:
-                                continue
-                        elif next_token.x == current_x-1 and next_token.y == current_y: 
+                            direction = 'down_left'
+                        elif next_token.x == t.x-1 and next_token.y == t.y: 
                             direction = 'left'
-                        elif next_token.x == current_x-1 and next_token.y == current_y+1:
+                        elif next_token.x == t.x-1 and next_token.y == t.y-1:
                             direction = 'up_left'
-                        elif next_token.x == current_x and next_token.y == current_y+1:
+                        elif next_token.x == t.x and next_token.y == t.y-1:
                             direction = 'up'
-                        elif next_token.x == current_x+1 and next_token.y == current_y+1:
+                        elif next_token.x == t.x+1 and next_token.y == t.y-1:
                             direction = 'up_right'
-                        elif next_token.x == current_x+1 and next_token.y == current_y:
+                        elif next_token.x == t.x+1 and next_token.y == t.y:
                             direction = 'right'
-                        elif next_token.x == current_x+1 and next_token.y == current_y-1:
+                        elif next_token.x == t.x+1 and next_token.y == t.y+1:
                             direction = 'down_right'
-            
+                        result = connect(direction, t, next_token)
+                        if result == 'Win!':
+                            print("\n***WINNER!!!***\n")
+                            self.print_board()
+                            return
+                        else:
+                            continue
+        
     # looks up a Token on board based on X,Y value. Returns said Token object
     # takes optional display parameter that if True will print the game board w/ lookup location as '| ! |'
     def token_lookup(self, x, y, display=False):
@@ -201,10 +210,11 @@ class Player:
     # if player instance does not already have name, asks for one 
     # otherwise, returns player name    
     def get_name(self):
-        if self.name == None:
+        if self.name == 'Player':
             while True:
                 raw_name = input('\nWhat is your name, oh stranger?\n')
                 self.name = raw_name
+                print(f'\nWelcome {self.name}!\n')
                 break
         else:
             return self.name
@@ -219,21 +229,58 @@ def fill_board(board, player=Player(), fill_random=False):
     for c in range(board.num_cols):
         for r in range(board.num_rows):
             rnd = random.choice([Player(), CPU()])
+            rnd_col = random.randint(0, board.num_cols-1)
             if fill_random:
-                board.drop_token(c+1, rnd)
+                board.drop_token(rnd_col, rnd)
             else:
                 board.drop_token(c+1, player)
 
-
-board = Board()
-p1 = Player('Wike')
-cpu = CPU()
+def play_game():
+    print(c4utils.welcome)
+    # sleep(5)
+    while True:
+        ask_ready = input("\nReady to play?\n\n$")
+        ask_ready.strip()
+        if ask_ready in c4utils.y_responses:
+            print('\nSetting up the game!...\n')
+            p1 = Player()
+            p1.get_name()
+            break
+        if ask_ready in c4utils.n_responses:
+            c4utils.killswitch()
+        else:
+            print('\nInvalid input!\n')    
+            continue
+    print('\nSetting up the board...\n'), sleep(1)
+    board = Board()
+    print('\nWaking up the robot...\n'), sleep(1)
+    cpu = CPU()
+    print('\nFlipping the coin...\n'), sleep(1)
+    go_first = random.choice([p1, cpu])
+    if go_first == p1:
+        print(f'\n{p1.name} will go first!\n'), sleep(1)
+    if go_first == cpu:
+        print('\nThe robot will go first!\n'), sleep(1)
+    print('\nReady to play!\n')
+    board.print_board()
+    while True:
+        col_selection = input(f'\nWhich column will you play? (Enter a number between 1 - {board.num_cols}\n')
+        random_col = random.randint(1, board.num_cols)
+        # parse input needed
+        c4utils.clearFunc()
+        board.drop_token(int(col_selection), p1), sleep(1)
+        board.check_win()
+        print("\nIt's the robot's turn...\n"), sleep(1)
+        c4utils.clearFunc()
+        # cpu logic needed, random for now 
+        board.drop_token(random_col, cpu)
+        board.check_win()
 
 # print(board.check_win())
 # board.board[5][6] = '| ! |'
 # board.print_board()
 
-fill_board(board, fill_random=True)
+# fill_board(board, fill_random=True)
 # fill_board(board, p1)
 
 # t1 = board.token_lookup(6, 5, True)
@@ -245,4 +292,13 @@ fill_board(board, fill_random=True)
 
 # board.print_all_tokens()
 
-board.check_win()
+# board.check_win()
+
+# board.drop_token(7, p1)
+# board.drop_token(7, p1)
+# board.drop_token(7, p1)
+# board.drop_token(7, p1)
+# board.check_win()
+
+play_game()
+
