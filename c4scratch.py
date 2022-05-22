@@ -9,9 +9,10 @@
 #     print('-----------------------------------')    
     
 # print_board()
-num_cols = 7
-num_rows = 6
+# num_cols = 7
+# num_rows = 6
 
-for i in range(0, num_rows):
-    for n in range(0, num_cols):
-        print(f'[{i}][{n}]')
+# for i in range(0, num_rows):
+#     for n in range(0, num_cols):
+#         print(f'[{i}][{n}]')
+

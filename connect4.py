@@ -1,6 +1,7 @@
 #imports
 import random
 
+
 # class definitions
 
 # probably wont use this, unnecessary..the Board is the game...
@@ -101,34 +102,66 @@ class Board:
     # work in progress...
     def check_win(self):
         # thinking count will work with while to recursively check adjacents until 4, in which case win
-        count = 1
         # iterate through every Token object in self.tokens (list). adjacents list is all possible adjacent cells relative X and Y values
         for num, t in self.tokens.items():
             adjacents = [(t.x-1, t.y+1), (t.x-1, t.y), (t.x-1, t.y-1), (t.x, t.y+1), (t.x, t.y-1,), (t.x+1, t.y+1), (t.x+1, t.y), (t.x+1, t.y-1)]
             # current_x and y are for legibility..having trouble wrapping my head around this...
             current_x = t.x
             current_y = t.y
-            print(f'Current token position is: {current_x}, {current_y}')
+            print(f'\r**Current token position is: {current_x}, {current_y}')
             for a in adjacents:
                 adj_x = a[0]
                 adj_y = a[1]
                 print(f'Checking: {adj_x}, {adj_y}')
                 # first, check if adjacent cell is within board. if not, ignore
                 if adj_x < 0 or adj_y < 0:
-                    print('out of range!')
+                    # print('out of range!')
                     continue
-                if adj_x > self.num_rows-1 or adj_y > self.num_cols-1:
-                    print('out of range!')
+                if adj_x > self.num_cols-1 or adj_y > self.num_rows-1:
+                    # print('out of range!')
                     continue
                 else:
                     # passes boundary checks. check if symbol matches current token, if so continue to check adjacents until 4 in a row
-                    print('Valid  cell!')
-                    adj_cell = self.board[adj_x][adj_y]
-                    # token lookup function??
+                    # print('Valid  cell!')
+                    adj_cell = self.board[adj_y][adj_x]
                     if adj_cell == t.symbol:
                         print('Ping!')
                         next_token = self.token_lookup(adj_x, adj_y)
-
+                        if next_token.x == t.x-1 and next_token.y == t.y+1:
+                            print('\ndown_left!\n')
+                            count = 2
+                            while count < 4:
+                                print('entered loop...')
+                                current_token = next_token
+                                next_token = self.token_lookup(current_token.x-1,current_token.y+1)
+                                try:
+                                    print(f'Checking down_left... x:{next_token.x} y:{next_token.y}')
+                                except:
+                                    print('Nonetype')
+                                if next_token is None:
+                                    break
+                                if next_token.symbol == current_token.symbol:
+                                    print('Hit! +1')
+                                    count += 1
+                                    continue
+                            if count == 4:
+                                print('\nholy shit did it work?')
+                                return 'Win!'
+                            else:
+                                continue
+                        elif next_token.x == current_x-1 and next_token.y == current_y: 
+                            direction = 'left'
+                        elif next_token.x == current_x-1 and next_token.y == current_y+1:
+                            direction = 'up_left'
+                        elif next_token.x == current_x and next_token.y == current_y+1:
+                            direction = 'up'
+                        elif next_token.x == current_x+1 and next_token.y == current_y+1:
+                            direction = 'up_right'
+                        elif next_token.x == current_x+1 and next_token.y == current_y:
+                            direction = 'right'
+                        elif next_token.x == current_x+1 and next_token.y == current_y-1:
+                            direction = 'down_right'
+            
     # looks up a Token on board based on X,Y value. Returns said Token object
     # takes optional display parameter that if True will print the game board w/ lookup location as '| ! |'
     def token_lookup(self, x, y, display=False):
@@ -136,12 +169,10 @@ class Board:
             if token.x == x and token.y == y:
                 if display:
                     # stores current value (X or O) so we can revert it after displaying it's location
-                    print('\nDisplay reached!\n')
                     current_value = self.board[y][x]
                     self.board[y][x] = '| ! |'
                     self.print_board()
                     self.board[y][x] = current_value
-                print('\nLookup succesful!\n')
                 return token
 
 # token class created to track token locations, all instances are added to board.tokens
@@ -184,10 +215,14 @@ class CPU:
         self.moves = 0
 
 # testing function. fills entire board with Token for specified Player object
-def fill_board(board, player):
+def fill_board(board, player=Player(), fill_random=False):
     for c in range(board.num_cols):
         for r in range(board.num_rows):
-            board.drop_token(c+1, player)
+            rnd = random.choice([Player(), CPU()])
+            if fill_random:
+                board.drop_token(c+1, rnd)
+            else:
+                board.drop_token(c+1, player)
 
 
 board = Board()
@@ -198,10 +233,16 @@ cpu = CPU()
 # board.board[5][6] = '| ! |'
 # board.print_board()
 
-# print(board.token_lookup(6, 5, True))
-# print(board.token_lookup(3, 3, True))
-# print(board.token_lookup(1, 4, True))
+fill_board(board, fill_random=True)
+# fill_board(board, p1)
+
+# t1 = board.token_lookup(6, 5, True)
+# t2 = board.token_lookup(3, 3, True)
+# t3 = board.token_lookup(1, 4, True)
+# print(t1.x,t1.y)
 # board.print_board()
 
-fill_board(board, p1)
-board.print_all_tokens()
+
+# board.print_all_tokens()
+
+board.check_win()
