@@ -31,6 +31,7 @@ class Board:
     
     # prints board throughout the game
     def print_board(self):
+        # generate a list of column numbers and print at top of list
         col_nums = ['  {}  '.format(i) for i in range(1, self.num_cols+1)]
         print("".join(col_nums))
         for i in range(self.num_cols):
@@ -42,16 +43,16 @@ class Board:
             print('-----', end="")
         print('\r')
 
+    # celebrate good times, come on
     def celebrate(self):
-        original_board = self.board
+        original_board = [i for i in self.board]
         for y in range(self.num_rows):
             for x in range(self.num_cols):
                 c4utils.clearFunc()
                 self.board[y][x] = '| ! |'
                 self.print_board()
                 sleep(.3)
-        # this does not revert to the original board as intended..need to fix, but this is just for funsies
-        self.board = original_board
+        self.board = [i for i in original_board]
 
 
     # loops through every cell in board, if any are empty, 'empty_found' updates to True
@@ -112,28 +113,38 @@ class Board:
         if self.check_full():
             print('\nBoard is full! No more possible moves...\n'), sleep(1)
             print('\nGAME OVER!!!\n')
+            return 'Full'
         return token
         
     def print_all_tokens(self):
         for num , t in self.tokens.items():
             print(f'Token {num}... X: {t.x}, Y: {t.y}')
 
-    # work in progress...
+    # check_Win will loop through every adjacent cell to the newly dropped Token, if a hit is found, connect() is triggered
+    # will iterate in both direction *and opposite* direction of adjacent matching cell, looking for more matching cells
     def check_win(self, t):
-        # check_Win will loop through every adjacent cell to the newly dropped Token, if a hit is found, connect() is triggered
-        # will iterate in both direction *and opposite* direction of adjacent matching cell, looking for more matching cells
+        # connect() is step 2 of function, called when we find any adjacent cell with matching value
+        # will then iterate in both directions, looking for more matching tokens
         def connect(direction, current_token):
+            # dictionary of directions with their opposites for easy lookup
             inverses = {'down_left': 'up_right', 'left': 'right', 'up_left': 'down_right', 'up': 'down', 'up_right': 'down_left', 'right': 'left', 'down_right': 'up_left', 'down': 'up'}
+            # reset count to 1 every time function is called
             count = 1
+            # get difference in X, Y coords from directions dict
             x_change1, y_change1 = directions[direction]
+            # get opposite direction from inverses dictionary, and get difference in X, Y coords from directions
             inverse = inverses[direction]
             x_change2, y_change2 = directions[inverse]
+            # define symbol to look for, and the next 2 tokens to search
             symbol = current_token.symbol
             next_token1 = self.token_lookup(current_token.x+x_change1,current_token.y+y_change1)
             next_token2 = self.token_lookup(current_token.x+x_change2,current_token.y+y_change2)
+            # loop will only execute while next tokens exist (ignores out of bounds, etc)
             while next_token1 or next_token2:
                 if next_token1 is not None:  
                     print(f'Checking {direction} (x:{next_token1.x} y:{next_token1.y})')
+                    # check first token for matchimg symbol, if found +1 to count, next token1 is advanced to the next token in the same direction
+                    # if symbol does not match or out of bounds, return None
                     if next_token1.symbol == symbol:
                         count += 1
                         print('Hit! +1, Count: ',count)
@@ -143,6 +154,8 @@ class Board:
                             next_token1 = self.token_lookup(next_token1.x+x_change1,next_token1.y+y_change1)
                     else:
                         next_token1 = None
+                # same process is repeated for next_token2 in opposite direction
+                # if at any point count == 4, returns 'Win!', else returns None
                 if next_token2 is not None:  
                     print(f'Checking {inverse} (x:{next_token2.x} y:{next_token2.y}')
                     if next_token2.symbol == symbol:
@@ -150,21 +163,23 @@ class Board:
                         print('Hit! +1, Count: ',count)
                         if count >= 4:
                             return 'Win!'
-                        next_token2 = self.token_lookup(next_token2.x+x_change2.next_token2.y+y_change2)
+                        next_token2 = self.token_lookup(next_token2.x+x_change2, next_token2.y+y_change2)
                     else:
                         next_token2 = None
                 if count == 4:
                     return 'Win!'
                 else:
                     continue
-        # thinking count will work with while to recursively check adjacents until 4, in which case win
-        # iterate through every Token object in self.tokens (list). adjacents list is all possible adjacent cells relative X and Y values
+
+        # Step 1 of the function. check_win() takes a Token object as an argument, and checks every adjacent cell for matching symbol
+        # if found, executes connect() inner function to continue the search
         while True:
+            # creates list of every adjacent cell's X, Y values using the position of the passed Token 
             adjacents = [(t.x-1, t.y+1), (t.x-1, t.y), (t.x-1, t.y-1), (t.x, t.y+1), (t.x, t.y-1,), (t.x+1, t.y+1), (t.x+1, t.y), (t.x+1, t.y-1)]
-            # current_x and y are for legibility..having trouble wrapping my head around this...
             current_x = t.x
             current_y = t.y
             print(f'\r**Current token position is: {current_x}, {current_y}')
+            # loop through every adjacent cell 
             for a in adjacents:
                 adj_x = a[0]
                 adj_y = a[1]
@@ -177,15 +192,16 @@ class Board:
                     print('out of range!')
                     continue
                 else:
-                    directions = {'down_left': (-1,+1), 'left': (-1,0), 'up_left': (-1,-1), 'up': (0,-1), 'up_right': (+1,-1), 'right': (+1,0), 'down_right': (+1,+1), 'down': (0,+1)}
                     # passes boundary checks. check if symbol matches current token, if so continue to check adjacents until 4 in a row
+                    directions = {'down_left': (-1,+1), 'left': (-1,0), 'up_left': (-1,-1), 'up': (0,-1), 'up_right': (+1,-1), 'right': (+1,0), 'down_right': (+1,+1), 'down': (0,+1)}
                     print('Valid  cell!')
+                    # store adjacent cells value and check for matching symbol
                     adj_cell = self.board[adj_y][adj_x]
                     if adj_cell == t.symbol:
                         print('Ping!')
                         # use Token lookup function to return Token object of the current adjacent cell w/ matching val
                         next_token = self.token_lookup(adj_x, adj_y)
-                        # determine direction of adjacent matching token by X,Y value
+                        # determine direction of adjacent matching token by X,Y value with directions dict
                         if next_token.x == t.x-1 and next_token.y == t.y+1:
                             direction = 'down_left'
                         if next_token.x == t.x-1 and next_token.y == t.y: 
@@ -268,6 +284,7 @@ class CPU:
         self.moves = 0
 
 # testing function. fills entire board with Token for specified Player object
+# optionally, will fill board with random tokens
 def fill_board(board, player=Player(), fill_random=False):
     for c in range(board.num_cols):
         for r in range(board.num_rows):
@@ -281,6 +298,7 @@ def fill_board(board, player=Player(), fill_random=False):
 def play_game():
     # inner function definitions...
 
+    # primary gameplay loop. gets column number (1-7) from user, attempts to drop a token in that position
     def player_move():
         while True:
             board.print_board()
@@ -297,12 +315,16 @@ def play_game():
             c4utils.clearFunc()
             player_token = board.drop_token(col_selection, p1)
             sleep(1)
+            if player_token == 'Full':
+                return 'Full'
             if player_token is False or player_token is None:
                 continue
+            # check_win() will return None or 'Win!'. If win, player_move() returns True, else Falsy
             game_over = board.check_win(player_token)
             if game_over:
                 return True
             return
+    # same process for the CPU, minus the user input. CPU currently very stupid and only uses random column selection
     def cpu_move():
         print("\nIt's the robot's turn...\n"), sleep(1)
         c4utils.clearFunc()
@@ -315,6 +337,8 @@ def play_game():
                     break
             # cpu logic needed, random for now 
             cpu_token = board.drop_token(random_col, cpu)
+            if cpu_token == 'Full':
+                return 'Full'
             if cpu_token is False or cpu_token is None:
                 continue
             sleep(1)
@@ -351,15 +375,21 @@ def play_game():
     # randomly decide whether player or cpu goes first
     print('\nFlipping the coin...\n'), sleep(1)
     go_first = random.choice([p1, cpu])
+    # top level loops housing the primary function calls. onlt difference between the two is whether player or cpu goes first
+    # must be a more pythonic way to write this, will come back
     if go_first == p1:
         print(f'\n{p1.name} will go first!\n'), sleep(1)
         print('\nReady to play!\n')
         while True:
             player_win = player_move()
+            if player_win == 'Full':
+                break
             if player_win:
                 print('\n\n***WINNER CHICKEN DINNER!!!***\n\n')
                 break
             cpu_win = cpu_move()
+            if cpu_win == 'Full':
+                break
             if cpu_win:
                 print('\n\n***CPU WINS!!!***\n\n')
                 break
@@ -368,16 +398,23 @@ def play_game():
         print('\nReady to play!\n')
         while True:
             cpu_win = cpu_move()
+            if cpu_win == 'Full':
+                break
             if cpu_win:
                 print('\n\n***CPU WINS!!!***\n\n')
                 break
             player_win = player_move()
+            if player_win == 'Full':
+                break
             if player_win:
                 print('\n\n***WINNER CHICKEN DINNER!!!***\n\n')
                 break
+    # game is over! print the board one last time and...        
     board.print_board()
     input('\nPress any key to celebrate!\n')
+    # celebrate!!
     board.celebrate()
+    # play again? loop
     while True:            
         play_again = input('\nWould you like to play again?\n\n$')
         if play_again in c4utils.y_responses:
@@ -387,6 +424,8 @@ def play_game():
         else:
             print('\nInvalid input!\n')
             continue
+
+# ***testing blocks...leaving for now, will clean up later. 
 
 # print(board.check_win())
 # board.board[5][6] = '| ! |'
@@ -413,5 +452,9 @@ def play_game():
 # board.check_win()
 
 # Board().celebrate()
+
+
+# ***EXECUTE THE GAME!!!****
+
 play_game()
 
