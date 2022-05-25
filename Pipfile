@@ -4,8 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+progress = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.7.3"
+python_version = "3.9.7"

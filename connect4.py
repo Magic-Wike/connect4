@@ -1,13 +1,15 @@
 #imports
 import random
 import c4utils
-from time import sleep
+import time
+from copy import deepcopy
+from progress.spinner import MoonSpinner, Spinner
 
 # class definitions
 
 # ***MOST IMPORTANT COMMENT IN THE WHOLE THING**:
 # game board is a 2 dimensional list and thus is referenced as board[Y][X]..this is counter intuitive since Y value comes first. 
-# everything else *should* be coded to take an x,y value (token objects for example), but easy mistake to make. keep eye out for bugs
+# everything else *should* be coded to take an x,y value (token objects for example)...should have just made this [row][col]
 class Board:
     # creates a board instance with a variable # of rows and colums (default: 6, 7)
     # board currently does not format correctly for nums larger than 7. Need to update formatting for 2 digit numbers
@@ -38,15 +40,14 @@ class Board:
 
     # celebrate good times, come on
     def celebrate(self):
-        original_board = [i for i in self.board]
+        original_board = deepcopy(self.board)
         for y in range(self.num_rows):
             for x in range(self.num_cols):
                 c4utils.clearFunc()
                 self.board[y][x] = '| ! |'
                 self.print_board()
-                sleep(.3)
-        self.board = [i for i in original_board]
-
+                time.time.sleep(.3)
+        self.board = deepcopy(original_board)
 
     # loops through every cell in board, if any are empty, 'empty_found' updates to True
     # if empty is found, function returns false -- if no empties found, check_full = True
@@ -81,7 +82,7 @@ class Board:
             print(f'\nOut of range! There are {self.num_cols} columns in the board.\n')
             return 
         # iterating through column from bottom up
-        print(f'\n\n\n{player.name} attempts to drop a {token} in column {col}...\r'), sleep(1)
+        print(f'\n\n\n{player.name} attempts to drop a {token} in column {col}...\r'), time.sleep(1)
         for i in range(self.num_rows-1, -1, -1):
             row = self.board[i]
             tokenY = i
@@ -99,12 +100,12 @@ class Board:
             # if at end of loop (i=0) the cell is occupied, column is full.
             # return None and end loop
             if i == 0 and cell in ['| X |', '| O |']:
-                print('\nStack is full!\n'), sleep(1)
+                print('\nStack is full!\n'), time.sleep(1)
                 return 
         # self.print_board()
         # at the end of every token drop, check if board is full
         if self.check_full():
-            print('\nBoard is full! No more possible moves...\n'), sleep(1)
+            print('\nBoard is full! No more possible moves...\n'), time.sleep(1)
             print('\nGAME OVER!!!\n')
             return 'Full'
         return token
@@ -289,6 +290,19 @@ def fill_board(board, player=Player(), fill_random=False):
             else:
                 board.drop_token(c+1, player)
 
+def spinny(duration, msg=None, spinner=Spinner()):
+    global time
+    if not msg:
+        msg = ''
+    if spinner == 'moon':
+        spinner = MoonSpinner('')
+    else:
+        spinner = Spinner('')
+    end = time.time() + duration
+    print(f'{msg}')
+    while time.time() < end:
+        spinner.next()
+
 def play_game():
     # inner function definitions...
 
@@ -308,7 +322,7 @@ def play_game():
                     continue
             c4utils.clearFunc()
             player_token = board.drop_token(col_selection, p1)
-            sleep(1)
+            time.sleep(1)
             if player_token == 'Full':
                 return 'Full'
             if player_token is False or player_token is None:
@@ -320,7 +334,7 @@ def play_game():
             return
     # same process for the CPU, minus the user input. CPU currently very stupid and only uses random column selection
     def cpu_move():
-        print("\nIt's the robot's turn...\n"), sleep(1)
+        print("\nIt's the robot's turn...\n"), time.sleep(1)
         c4utils.clearFunc()
         while True:
             while True:
@@ -335,7 +349,7 @@ def play_game():
                 return 'Full'
             if cpu_token is False or cpu_token is None:
                 continue
-            sleep(1)
+            time.sleep(1)
             game_over = board.check_win(cpu_token)
             if game_over:
                 return True
@@ -344,7 +358,7 @@ def play_game():
     # welcome message and game start
     c4utils.clearFunc()
     print(c4utils.welcome)
-    sleep(5)
+    spinny(5, 'Loading...', 'moon')
     # ready to play? loop
     while True:
         ask_ready = input("\nReady to play?\n\n$")
@@ -362,17 +376,17 @@ def play_game():
             print('\nInvalid input!\n')    
             continue
     # initializing the game objects
-    print('\nSetting up the board...\n'), sleep(1)
+    spinny(2, '\nSetting up the board...\n')
     board = Board()
-    print('\nWaking up the robot...\n'), sleep(1)
+    spinny(2, '\nWaking up the robot...\n')
     cpu = CPU()
+    spinny(2, '\nFlipping the coin...\n')
     # randomly decide whether player or cpu goes first
-    print('\nFlipping the coin...\n'), sleep(1)
     go_first = random.choice([p1, cpu])
     # top level loops housing the primary function calls. onlt difference between the two is whether player or cpu goes first
     # must be a more pythonic way to write this, will come back
     if go_first == p1:
-        print(f'\n{p1.name} will go first!\n'), sleep(1)
+        print(f'\n{p1.name} will go first!\n'), time.sleep(1)
         print('\nReady to play!\n')
         while True:
             player_win = player_move()
@@ -388,7 +402,7 @@ def play_game():
                 print('\n\n***CPU WINS!!!***\n\n')
                 break
     if go_first == cpu:
-        print('\nThe robot will go first!\n'), sleep(1)
+        print('\nThe robot will go first!\n'), time.sleep(1)
         print('\nReady to play!\n')
         while True:
             cpu_win = cpu_move()

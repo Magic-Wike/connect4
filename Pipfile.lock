@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a36a5392bb1e8bbc06bfaa0761e52593cf2d83b486696bf54667ba8da616c839"
+            "sha256": "d8328c036a8c3c24bace05c184030edc655f40966f7bc27724f0dfeadd39eeac"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.9"
+            "python_version": "3.7.3"
         },
         "sources": [
             {
@@ -15,6 +15,14 @@
             }
         ]
     },
-    "default": {},
+    "default": {
+        "progress": {
+            "hashes": [
+                "sha256:c9c86e98b5c03fa1fe11e3b67c1feda4788b8d0fe7336c2ff7d5644ccfba34cd"
+            ],
+            "index": "pypi",
+            "version": "==1.6"
+        }
+    },
     "develop": {}
 }
