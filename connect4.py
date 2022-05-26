@@ -3,7 +3,7 @@ import random
 import c4utils
 import time
 from copy import deepcopy
-from progress.spinner import MoonSpinner, Spinner
+# from progress.spinner import MoonSpinner, Spinner
 
 # class definitions
 
@@ -46,7 +46,7 @@ class Board:
                 c4utils.clearFunc()
                 self.board[y][x] = '| ! |'
                 self.print_board()
-                time.time.sleep(.3)
+                time.sleep(.3)
         self.board = deepcopy(original_board)
 
     # loops through every cell in board, if any are empty, 'empty_found' updates to True
@@ -78,7 +78,7 @@ class Board:
         # assuming col will take user input (column number 1 - total columns). subtract one for indexing
         tokenX = int(col)-1
         # check if column is valid input. return None if false
-        if col > self.num_cols:
+        if col > self.num_cols or col == 0:
             print(f'\nOut of range! There are {self.num_cols} columns in the board.\n')
             return 
         # iterating through column from bottom up
@@ -290,19 +290,6 @@ def fill_board(board, player=Player(), fill_random=False):
             else:
                 board.drop_token(c+1, player)
 
-def spinny(duration, msg=None, spinner=Spinner()):
-    global time
-    if not msg:
-        msg = ''
-    if spinner == 'moon':
-        spinner = MoonSpinner('')
-    else:
-        spinner = Spinner('')
-    end = time.time() + duration
-    print(f'{msg}')
-    while time.time() < end:
-        spinner.next()
-
 def play_game():
     # inner function definitions...
 
@@ -358,7 +345,7 @@ def play_game():
     # welcome message and game start
     c4utils.clearFunc()
     print(c4utils.welcome)
-    spinny(5, 'Loading...', 'moon')
+    c4utils.spinny(5, 'Loading...', 'moon')
     # ready to play? loop
     while True:
         ask_ready = input("\nReady to play?\n\n$")
@@ -376,17 +363,17 @@ def play_game():
             print('\nInvalid input!\n')    
             continue
     # initializing the game objects
-    spinny(2, '\nSetting up the board...\n')
+    c4utils.spinny(2, '\nSetting up the board...\n')
     board = Board()
-    spinny(2, '\nWaking up the robot...\n')
+    c4utils.spinny(2, '\nWaking up the robot...\n')
     cpu = CPU()
-    spinny(2, '\nFlipping the coin...\n')
+    c4utils.spinny(2, '\nFlipping the coin...\n')
     # randomly decide whether player or cpu goes first
     go_first = random.choice([p1, cpu])
     # top level loops housing the primary function calls. onlt difference between the two is whether player or cpu goes first
     # must be a more pythonic way to write this, will come back
     if go_first == p1:
-        print(f'\n{p1.name} will go first!\n'), time.sleep(1)
+        print(f'\n{p1.name} will go first!\n'), time.sleep(2.5)
         print('\nReady to play!\n')
         while True:
             player_win = player_move()

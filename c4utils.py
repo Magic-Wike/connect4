@@ -1,5 +1,7 @@
 import sys
 import os
+from progress.spinner import MoonSpinner, Spinner
+import time
 
 y_responses = ['y', 'yes', 'ya', 'yup', 'send it', 'hit me']
 n_responses = ['n', 'no', 'nope', 'nah']
@@ -35,6 +37,20 @@ def clean_input(string):
 def killswitch():
     print("\n\n\n\nGoobye!\n\n\n\n")
     quit()
+    
+def spinny(duration, msg=None, spinner=Spinner()):
+  global time
+  if not msg:
+      msg = ''
+  if spinner == 'moon':
+      spinner = MoonSpinner('')
+  else:
+      spinner = Spinner('')
+  end = time.time() + duration
+  print(f'{msg}')
+  while time.time() < end:
+      spinner.next()
+  clearFunc()
 
 # def print_user_commands():
 #     print("\n")
